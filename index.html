@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>琉璃十二人格测试</title>
+<style>
+  :root {
+    --bg-deep: #0a0a2e;
+    --bg-mid: #120c3a;
+    --glass-bg: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.10);
+    --glass-hover: rgba(255,255,255,0.08);
+    --text: #e8e4f0;
+    --text-light: #b0a8c8;
+    --text-dim: #7a7298;
+    --accent-purple: #a855f7;
+    --accent-cyan: #06b6d4;
+    --accent-pink: #ec4899;
+    --accent-gold: #f0c060;
+    --glow-purple: rgba(168,85,247,0.35);
+    --glow-cyan: rgba(6,182,212,0.30);
+    --glow-pink: rgba(236,72,153,0.30);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.75;
+    overflow-x: hidden;
+    position: relative;
+  }
+  /* Particle Canvas */
+  #particleCanvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+  /* Animated gradient overlay */
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background:
+      radial-gradient(ellipse 70% 60% at 20% 20%, rgba(168,85,247,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 30%, rgba(6,182,212,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 50% 80%, rgba(236,72,153,0.06) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0a2e 0%, #100b38 40%, #1a0a3e 100%);
+    z-index: -1; pointer-events: none;
+  }
+
+  .header {
+    text-align: center; padding: 52px 20px 32px;
+    position: relative; z-index: 1;
+  }
+  .header .icon {
+    font-size: 48px; margin-bottom: 14px; display: block;
+    filter: drop-shadow(0 0 20px rgba(168,85,247,0.5));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .header h1 {
+    font-size: 2.3em;
+    background: linear-gradient(135deg, #c4b5fd, #67e8f9, #f0abfc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 5px; font-weight: 800; margin-bottom: 6px;
+  }
+  .header .subtitle {
+    color: var(--text-light); font-size: 0.95em; letter-spacing: 2px;
+    opacity: 0.75;
+  }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 0 16px 60px; position: relative; z-index: 1; }
+
+  /* Glass Cards */
+  .intro-card, .question-card, .detail-card, .score-chart {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .intro-card { padding: 28px 32px; margin-bottom: 28px; }
+  .intro-card h2 {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.15em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .intro-card p { color: var(--text-light); margin-bottom: 10px; font-size: 0.93em; }
+  .intro-card .highlight {
+    background: rgba(168,85,247,0.08); border-left: 3px solid var(--accent-purple);
+    padding: 12px 16px; border-radius: 0 8px 8px 0; margin-top: 14px;
+  }
+  .intro-card .highlight p { color: var(--text); margin-bottom: 4px; font-size: 0.88em; }
+
+  /* Buttons */
+  .start-section { text-align: center; margin: 28px 0; }
+  .btn-start {
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    color: #fff; border: none; font-size: 1.1em; padding: 15px 52px;
+    border-radius: 50px; cursor: pointer; font-weight: 700; letter-spacing: 3px;
+    transition: all 0.35s;
+    box-shadow: 0 4px 24px var(--glow-purple), 0 0 60px rgba(168,85,247,0.15);
+    position: relative; overflow: hidden;
+  }
+  .btn-start::after {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.35s;
+  }
+  .btn-start:hover { transform: translateY(-3px); box-shadow: 0 6px 32px var(--glow-purple), 0 0 80px rgba(168,85,247,0.25); }
+  .btn-start:hover::after { opacity: 1; }
+  .btn-start:active { transform: translateY(-1px); }
+
+  /* Progress */
+  .progress-wrap { display: none; margin-bottom: 20px; }
+  .progress-wrap.active { display: block; }
+  .progress-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.82em; color: var(--text-light); }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan), var(--accent-pink));
+    background-size: 200% 100%;
+    animation: shimmer 3s ease infinite;
+    border-radius: 3px; transition: width 0.4s ease;
+  }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  /* Question Card */
+  .question-card { padding: 28px 32px; margin-bottom: 18px; display: none; }
+  .question-card.active { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+  .question-num {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(6,182,212,0.15));
+    color: var(--accent-cyan); padding: 4px 14px; border-radius: 20px;
+    font-size: 0.82em; letter-spacing: 1px; margin-bottom: 14px;
+    border: 1px solid rgba(168,85,247,0.2);
+  }
+  .question-text { font-size: 1.08em; margin-bottom: 22px; color: var(--text); line-height: 1.85; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option-label {
+    display: flex; align-items: center; gap: 13px; padding: 14px 18px;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.3s;
+    background: rgba(255,255,255,0.02);
+  }
+  .option-label:hover {
+    border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.06);
+    box-shadow: 0 0 20px rgba(168,85,247,0.08);
+  }
+  .option-label input { display: none; }
+  .option-radio {
+    width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50%; flex-shrink: 0; position: relative; transition: all 0.3s;
+  }
+  .option-label input:checked + .option-radio {
+    border-color: var(--accent-purple);
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    box-shadow: 0 0 10px var(--glow-purple);
+  }
+  .option-label input:checked + .option-radio::after {
+    content: ''; position: absolute; width: 6px; height: 6px;
+    background: #fff; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+  }
+  .option-label:has(input:checked) {
+    border-color: rgba(168,85,247,0.5);
+    background: rgba(168,85,247,0.08);
+    box-shadow: 0 0 16px rgba(168,85,247,0.08);
+  }
+  .option-text { font-size: 0.92em; color: var(--text); }
+
+  /* Nav Buttons */
+  .nav-buttons { display: none; justify-content: space-between; margin-bottom: 32px; }
+  .nav-buttons.active { display: flex; }
+  .btn-nav {
+    padding: 12px 28px; border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(10px);
+    color: var(--text); cursor: pointer; font-size: 0.92em;
+    transition: all 0.3s; letter-spacing: 1px;
+  }
+  .btn-nav:hover { border-color: var(--accent-purple); color: #fff; box-shadow: 0 0 16px var(--glow-purple); }
+  .btn-nav.primary {
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    color: #fff; border: none; font-weight: 600;
+    box-shadow: 0 4px 20px var(--glow-purple);
+  }
+  .btn-nav.primary:hover { box-shadow: 0 6px 28px var(--glow-purple), 0 0 50px rgba(168,85,247,0.2); transform: translateY(-2px); }
+  .btn-nav:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+  /* ===== PAYWALL MODAL ===== */
+  .paywall-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(5,5,20,0.85); backdrop-filter: blur(10px);
+    z-index: 9998; align-items: center; justify-content: center;
+  }
+  .paywall-overlay.active { display: flex; animation: fadeIn 0.4s ease; }
+  .paywall-modal {
+    background: rgba(20,15,50,0.95);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; padding: 36px 28px;
+    max-width: 420px; width: 90%; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 80px rgba(168,85,247,0.15);
+    position: relative;
+  }
+  .paywall-modal .pw-icon { font-size: 56px; margin-bottom: 14px; display: block; }
+  .paywall-modal h2 {
+    font-size: 1.5em;
+    background: linear-gradient(135deg, var(--accent-gold), #fbbf24);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px; letter-spacing: 2px;
+  }
+  .paywall-modal .pw-desc { color: var(--text-light); font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; }
+  .paywall-modal .pw-features {
+    text-align: left; margin-bottom: 20px; padding: 16px;
+    background: rgba(255,255,255,0.03); border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .paywall-modal .pw-features li {
+    font-size: 0.85em; color: var(--text-light); line-height: 1.8; list-style: none;
+    padding-left: 20px; position: relative;
+  }
+  .paywall-modal .pw-features li::before {
+    content: '✦'; position: absolute; left: 0; color: var(--accent-cyan);
+    font-size: 0.7em; top: 2px;
+  }
+  .qr-placeholder {
+    width: 220px; height: 220px; margin: 0 auto 12px;
+    background: rgba(255,255,255,0.03);
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text-dim); font-size: 0.82em;
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-placeholder::before {
+    content: ''; position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+    animation: qrShine 3s ease-in-out infinite;
+  }
+  @keyframes qrShine { 0% { left: -100%; } 50% { left: 100%; } 100% { left: 100%; } }
+  .qr-placeholder .qr-icon { font-size: 48px; opacity: 0.5; margin-bottom: 8px; }
+  .qr-placeholder .qr-text { letter-spacing: 1px; }
+  .paywall-modal .pw-price {
+    font-size: 1.1em; color: var(--accent-gold); margin-bottom: 18px;
+    font-weight: 600; letter-spacing: 1px;
+  }
+  .btn-unlock {
+    display: block; width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent-gold), #d97706);
+    color: #1a0a2e; border: none; border-radius: 50px;
+    font-size: 1em; font-weight: 700; cursor: pointer;
+    letter-spacing: 2px; transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(240,192,96,0.3);
+    margin-bottom: 12px;
+  }
+  .btn-unlock:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(240,192,96,0.45); }
+  .btn-preview {
+    display: block; width: 100%; padding: 12px;
+    background: transparent; color: var(--text-light);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 50px;
+    font-size: 0.9em; cursor: pointer; letter-spacing: 1px;
+    transition: all 0.3s;
+  }
+  .btn-preview:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
+
+  /* ===== RESULT STYLES ===== */
+  .result-section { display: none; }
+  .result-section.active { display: block; animation: fadeIn 0.6s ease; }
+
+  .result-header { text-align: center; padding: 36px 20px 26px; }
+  .result-header .crown { font-size: 44px; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 16px var(--glow-purple)); }
+  .result-header h2 {
+    font-size: 1.9em;
+    background: linear-gradient(135deg, #c4b5fd, #67e8f9, #f0abfc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 3px; margin-bottom: 6px;
+  }
+  .result-header .result-type { font-size: 1.2em; color: var(--text); }
+
+  /* Score Chart */
+  .score-chart { padding: 24px 28px; margin-bottom: 22px; }
+  .score-chart h3 {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px; font-size: 1.05em; letter-spacing: 1px;
+  }
+  .score-row { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
+  .score-name { width: 82px; text-align: right; font-size: 0.82em; color: var(--text-light); flex-shrink: 0; }
+  .score-bar-wrap { flex: 1; height: 20px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; }
+  .score-bar-fill {
+    height: 100%; border-radius: 4px; transition: width 0.8s ease;
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+  }
+  .score-val { width: 38px; font-size: 0.82em; color: var(--accent-cyan); font-weight: 600; flex-shrink: 0; }
+  .score-row.top .score-name {
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .score-row.top .score-bar-fill {
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan), var(--accent-pink));
+    background-size: 200% 100%;
+    animation: shimmer 3s ease infinite;
+  }
+
+  /* Detail Card */
+  .detail-card { margin-bottom: 18px; overflow: hidden; }
+
+  .dc-banner { padding: 28px 28px 22px; text-align: center; position: relative; }
+  .dc-banner .dc-icon { font-size: 56px; display: block; margin-bottom: 10px; }
+  .dc-banner .dc-name { font-size: 2em; font-weight: 900; letter-spacing: 3px; margin-bottom: 4px; line-height: 1.2; }
+  .dc-banner .dc-eng { font-size: 0.95em; opacity: 0.55; letter-spacing: 2px; font-style: italic; }
+
+  .dc-info { padding: 0 24px 20px; }
+  .info-row { margin-bottom: 14px; }
+  .info-label {
+    font-size: 0.78em;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .info-content { display: flex; flex-wrap: wrap; gap: 6px; }
+  .info-tag {
+    background: rgba(255,255,255,0.05); padding: 4px 12px;
+    border-radius: 6px; font-size: 0.84em; color: var(--text);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .info-tag.brand-tag {
+    background: rgba(168,85,247,0.08); color: #c4b5fd;
+    border-color: rgba(168,85,247,0.2);
+  }
+  .declaration-box {
+    background: rgba(168,85,247,0.06);
+    border-left: 3px solid var(--accent-purple);
+    padding: 12px 16px; border-radius: 0 8px 8px 0;
+    font-size: 0.94em; color: #c4b5fd; font-style: italic; line-height: 1.7; margin-top: 4px;
+  }
+
+  .sec-block { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.04); }
+  .sec-title { font-size: 0.86em; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .sec-subtitle { font-size: 0.78em; color: var(--accent-purple); letter-spacing: 1px; font-weight: 600; margin: 14px 0 8px; }
+  .sec-block p { font-size: 0.89em; color: var(--text-light); line-height: 1.85; }
+  .sec-block ul { padding-left: 18px; margin-top: 4px; }
+  .sec-block li { font-size: 0.87em; color: var(--text-light); line-height: 1.75; margin-bottom: 3px; }
+
+  .sec-portrait .sec-title { color: #67e8f9; }
+  .sec-mechanism .sec-title { color: #34d399; }
+  .sec-strengths .sec-title { color: #f472b6; }
+  .sec-blind .sec-title { color: #a78bfa; }
+  .sec-career .sec-title { color: #fbbf24; }
+  .sec-ip .sec-title { color: #f0c060; }
+
+  .str-item { margin-bottom: 14px; }
+  .str-item strong { color: var(--text); font-size: 0.91em; }
+  .str-item p { font-size: 0.85em; color: var(--text-light); margin-top: 3px; }
+
+  .quote-block {
+    background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(6,182,212,0.04));
+    border: 1px solid rgba(168,85,247,0.15); border-radius: 12px;
+    padding: 20px 24px; margin: 18px 24px; position: relative;
+  }
+  .quote-label { font-size: 0.72em; color: var(--accent-purple); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 10px; }
+  .quote-text { font-size: 0.96em; color: var(--text); line-height: 1.85; font-style: italic; position: relative; padding: 0 20px; }
+  .quote-mark { position: absolute; top: -4px; font-size: 2em; color: var(--accent-purple); opacity: 0.3; font-family: Georgia, serif; line-height: 1; }
+  .quote-mark.left { left: 0; }
+  .quote-mark.right { right: 0; bottom: 0; }
+
+  .rank-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    color: #fff; font-size: 0.68em; font-weight: 800; letter-spacing: 1px;
+    padding: 3px 12px; border-radius: 12px; vertical-align: middle; margin-right: 8px;
+    box-shadow: 0 2px 8px var(--glow-purple);
+  }
+
+  .all-results-toggle { text-align: center; margin: 24px 0; }
+  .btn-toggle {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-light); padding: 10px 28px; border-radius: 50px;
+    cursor: pointer; font-size: 0.88em; transition: all 0.3s; letter-spacing: 1px;
+  }
+  .btn-toggle:hover { border-color: var(--accent-purple); color: #fff; box-shadow: 0 0 16px var(--glow-purple); }
+  .all-results { display: none; }
+  .all-results.active { display: block; animation: fadeIn 0.4s ease; }
+
+  .retry-section { text-align: center; margin: 32px 0; }
+
+  .footer {
+    text-align: center; padding: 26px 20px; color: var(--text-dim);
+    font-size: 0.78em; letter-spacing: 1px;
+    border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px;
+    position: relative; z-index: 1;
+  }
+
+  /* Preview Result */
+  .preview-section { display: none; }
+  .preview-section.active { display: block; animation: fadeIn 0.6s ease; }
+  .preview-header { text-align: center; padding: 36px 20px 20px; }
+  .preview-header h2 {
+    font-size: 1.6em;
+    background: linear-gradient(135deg, #c4b5fd, #67e8f9);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px; margin-bottom: 12px;
+  }
+  .preview-top {
+    text-align: center; padding: 20px;
+    background: rgba(255,255,255,0.03); border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px;
+  }
+  .preview-top .pt-icon { font-size: 64px; display: block; margin-bottom: 8px; }
+  .preview-top .pt-name { font-size: 1.6em; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .preview-banner {
+    text-align: center; padding: 24px; margin: 20px 0;
+    background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(6,182,212,0.05));
+    border: 1px solid rgba(168,85,247,0.15); border-radius: 16px;
+  }
+  .preview-banner .pb-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+  .preview-banner .pb-title { color: #c4b5fd; font-weight: 600; letter-spacing: 1px; margin-bottom: 6px; }
+  .preview-banner .pb-desc { color: var(--text-light); font-size: 0.85em; }
+
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.7em; letter-spacing: 3px; }
+    .intro-card, .question-card, .detail-card { padding: 18px 16px; }
+    .dc-banner { padding: 22px 18px 16px; }
+    .sec-block { padding: 16px 18px; }
+    .score-name { width: 64px; font-size: 0.74em; }
+    .paywall-modal { padding: 28px 18px; }
+    .qr-placeholder { width: 180px; height: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="header"><span class="icon">💎</span><h1>琉璃十二人格测试</h1><p class="subtitle">—— 发现你的人格原型，解锁你的内在潜能 ——</p></div>
+
+<div class="container">
+
+<!-- Intro -->
+<div class="intro-card" id="introSection">
+<h2>📋 测试说明</h2>
+<p>本测试基于<b>琉璃十二人格官方测评体系</b>，参考荣格原型理论与琉璃商学的商业应用框架，通过 72 道精心设计的题目，帮你发现自己的人格原型分布。</p>
+<p>琉璃十二人格系统由张大豆（琉璃商学创始人）提出，每种人格都包含完整的画像分析：从关键词、代表人物到内在驱动力、核心信念、性格优势与盲区风险、事业建议及专属充电心语。</p>
+<div class="highlight">
+<p>🕐 时长约 8-12 分钟 | 📝 72 题 | ⚠️ 凭直觉作答</p>
+<p>🔒 结果仅在本地显示，不会上传任何数据</p>
+</div>
+</div>
+
+<div class="start-section" id="startSection"><button class="btn-start" onclick="startTest()">开 始 测 试</button></div>
+
+<div class="progress-wrap" id="progressWrap"><div class="progress-info"><span id="progressText">第 1 / 72 题</span><span id="progressPercent">0%</span></div><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
+
+<div id="questionContainer"></div>
+
+<div class="nav-buttons" id="navButtons"><button class="btn-nav" id="btnPrev" onclick="prevQuestion()">← 上一题</button><button class="btn-nav primary" id="btnNext" onclick="nextQuestion()">下一题 →</button><button class="btn-nav primary" id="btnSubmit" onclick="submitTest()" style="display:none">查看结果 ✨</button></div>
+
+<!-- Toast -->
+<div id="toastReminder" style="display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;padding:14px 28px;border-radius:12px;font-size:0.95em;font-weight:600;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.4);animation:toastIn 0.4s ease;letter-spacing:1px;max-width:90%;text-align:center"></div>
+<style>@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}</style>
+
+<!-- ===== PAYWALL MODAL ===== -->
+<div class="paywall-overlay" id="paywallOverlay">
+  <div class="paywall-modal">
+    <span class="pw-icon">🔒</span>
+    <h2>解锁完整报告</h2>
+    <p class="pw-desc">你已完成全部 72 道测试题！<br>完整的琉璃十二人格报告已生成。</p>
+    <ul class="pw-features">
+      <li>12 种人格完整画像与深度解读</li>
+      <li>人格运行机制与内在驱动力分析</li>
+      <li>性格优势、盲区与风险提示</li>
+      <li>专属事业建议与个人IP策略</li>
+      <li>人格专属充电心语</li>
+    </ul>
+    <div class="qr-placeholder">
+      <span class="qr-icon">📱</span>
+      <span class="qr-text">请扫码支付</span>
+      <span style="font-size:1.2em;color:var(--accent-gold);font-weight:700;margin-top:4px;">¥9.9</span>
+      <span class="qr-text" style="margin-top:2px;opacity:0.6;">支付后解锁完整报告</span>
+    </div>
+    <p class="pw-price">💡 解锁费用仅需 ¥9.9</p>
+    <button class="btn-unlock" onclick="unlockFullReport()">✨ 我已支付，解锁查看</button>
+    <button class="btn-preview" onclick="showPreviewOnly()">🔍 预览简版结果</button>
+  </div>
+</div>
+
+<!-- Result -->
+<div class="result-section" id="resultSection">
+  <div class="result-header"><span class="crown">👑</span><h2>你的琉璃人格原型</h2><p class="result-type" id="resultType"></p></div>
+  <div class="score-chart"><h3>📊 十二人格得分分布</h3><div id="scoreChart"></div></div>
+  <div id="topDetails"></div>
+  <div class="all-results-toggle"><button class="btn-toggle" onclick="toggleAllResults()">📖 查看全部 12 种人格详解</button></div>
+  <div class="all-results" id="allResults"></div>
+  <div class="retry-section"><button class="btn-start" onclick="retryTest()">重新测试 🔄</button></div>
+</div>
+
+<!-- Preview Section -->
+<div class="preview-section" id="previewSection">
+  <div class="preview-header"><h2>📋 简版结果预览</h2><p style="color:var(--text-light);font-size:0.9em;">仅展示主导人格与得分排名</p></div>
+  <div class="preview-top" id="previewTop"></div>
+  <div class="score-chart"><h3>📊 十二人格得分分布</h3><div id="previewScoreChart"></div></div>
+  <div class="preview-banner">
+    <span class="pb-icon">🔒</span>
+    <div class="pb-title">想要查看完整解读？</div>
+    <div class="pb-desc">包含12种人格详细画像、驱动力分析、事业建议、充电心语等</div>
+    <button class="btn-unlock" style="margin-top:14px;max-width:280px;margin-left:auto;margin-right:auto;" onclick="showPaywallFromPreview()">✨ 解锁完整报告 ¥9.9</button>
+  </div>
+  <div class="retry-section"><button class="btn-start" onclick="retryTest()">重新测试 🔄</button></div>
+</div>
+
+</div>
+
+<div class="footer"><p>琉璃十二人格测试 · 基于官方体系 & 荣格原型理论</p><p>测试结果仅供参考，不构成任何专业心理诊断</p></div>
+
+<script>
+// ============ PARTICLE SYSTEM ============
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() {
+      this.reset();
+      this.y = Math.random() * h;
+    }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = -10;
+      this.size = Math.random() * 2 + 0.5;
+      this.speed = Math.random() * 0.4 + 0.1;
+      this.opacity = Math.random() * 0.5 + 0.1;
+      this.hue = Math.random() < 0.33 ? 270 : (Math.random() < 0.5 ? 190 : 330);
+      this.twinkle = Math.random() * Math.PI * 2;
+      this.twinkleSpeed = Math.random() * 0.02 + 0.005;
+    }
+    update() {
+      this.y += this.speed;
+      this.twinkle += this.twinkleSpeed;
+      if (this.y > h + 10) this.reset();
+    }
+    draw() {
+      const alpha = this.opacity * (0.6 + 0.4 * Math.sin(this.twinkle));
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 70%, 70%, ${alpha})`;
+      ctx.fill();
+      // Glow
+      if (this.size > 1.2) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${this.hue}, 70%, 70%, ${alpha * 0.15})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  const count = Math.min(80, Math.floor(window.innerWidth * 0.08));
+  for (let i = 0; i < count; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(168,85,247,${0.04 * (1 - dist / 120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ============ PERSONALITY DATA ============
+const personalityTypes = [
+{
+id:'outlaw',name:'叛逆者',eng:'Traitor',icon:'🏍️',color:'#67e8f9',
+keywords:['反叛','独立','真实','不服从','破界','颠覆'],
+people:['姜文','辛巴','埃隆·马斯克','韩寒','周鸿祎'],
+brands:['Vans','哈雷摩托','B站','Supreme','维珍'],
+declaration:'如果这套规则让我变得虚假，我就会毫不犹豫的打破它。',
+portrait:`你是质疑世界的人，也是让世界更新的人。
+你不愿意随波逐流，也不愿意把人生交给"既定答案"。在很多人习惯接受的地方，你会本能地停下来：这条规则是谁定的？它真的合理吗？它对谁有利？它在遮掩什么？你在所有"理所当然"里看到漏洞，在所有规则背后看到盲点。你天生不信"权威天然正确"，你更信"逻辑、证据和真实感"。
+你讨厌假象，厌倦常规，愿意把"不可能"摆到桌面上讨论，甚至愿意用行动去挑战它。
+你不太容易被洗脑，也不太容易被带节奏。别人觉得"大家都这么做"的事，你会觉得不对劲；别人觉得"忍一忍就过去了"，你会觉得这是在压抑真实。
+你的课题也在这里：当你长期处在反抗状态，你可能会忘了自己到底要什么；当你持续拆掉别人的理由，你也可能顺手拆掉自己的可能。你真正要走向的高阶状态，是把颠覆力转为建设性的变革。`,
+mechanism:{spirit:'你追求的是"真实的自由"。你不想要那种别人施舍的、带着条件的自由；你想要自己定义对错、自己选择活法的权利；你想做一个能说真话、能做真事、不用伪装的人。',drive:'你的动力来自对不合理的反应。当你看到虚伪、压迫、套路、双标，你会被点燃，甚至出于本能地想打破现状，哪怕要付出代价。你做很多事，不仅是在为自己争一口气，也是在为"不合理"发声。',fear:'你最怕的是"变得麻木，活成自己曾经讨厌的样子"。你怕自己最终向现实低头，闭上嘴，随大流，变成一个"识时务"的、圆滑的、但内心已经不再愤怒的人。那对你来说，等于精神死亡。',belief:'不是每一次崩塌都是结束，有时候，它是你重生的唯一开始。'},
+strengths:[
+{name:'颠覆性思维',desc:'你天生会对别人眼里的"理所当然"起怀疑态度。你往往能在别人已经麻木的地方，看到新可能性；在别人不再提问的地方，重新提出关键问题。这种思维方式，让你非常适合成为新机会的发现者。'},
+{name:'敢于直言与担当',desc:'你愿意说出别人心里委屈、却嘴上不敢讲的话。你并不享受冲突本身，你真正无法忍受的是：明明问题存在，却被所有人假装不存在。这会让你在团队、社群、组织中，成为一个敢于直面问题的人。也因此，很多的变革，正是从你开始发生的。'},
+{name:'勇气与行动力',desc:'你不喜欢空谈、拖延、表态式努力。你更愿意直接行动，而不是反复评估别人的态度。你不一定每一步都算得很精，但你愿意先走出去。在很多关键节点上，你是那个愿先试、先承担风险的人。这让你在开创阶段、试错阶段、突破阶段，表现得尤为突出。'},
+{name:'标识化与传播力',desc:'你的表达、立场和选择，很容易形成鲜明印象。你是一个有棱角、有态度的人，这种特质，让你在个人IP、内容表达、公众沟通中具备天然优势。你不需要刻意打造差异人设，你本身就具备可识别性。当你会稳定输出，而不是情绪化爆发时，这种传播力会变成长期资产。'}
+],
+talentArea:'你在以下领域往往能发挥超出平均水平的影响力：新模式探索与创新型业务；价值观鲜明的品牌与项目；转型期、混乱期、旧规则失效阶段；为弱势发声的领域；需要立场、判断和突破的关键角色。在观点输出、内容表达、个人IP打造等方面，你都比别人更容易拿到结果。',
+value:'你最大的价值在于：你能推动变革。你就像人体的免疫系统，专门攻击那些陈旧的、低效的、虚伪的"病菌"。没有你，系统会慢慢腐烂；有你，也许短期会疼，但能让组织活得长久健康。',
+blindSpots:{weaknesses:[
+{name:'过度对抗',desc:'容易把问题变成"立场之争"。你对问题的敏感度很高，只要看到问题，就想站出来指正。当外界持续反馈阻力时，你的能量会被大量消耗在"证明谁错了"上，而不是"把事情真正推进"。久而久之，你可能发现：你赢了所谓的"对错"，却输了结果。'}
+],risks:'抗拒权威：你本能地不信任权威，你对上级指令容易挑剔或质疑。这有时是优点，但也可能让你被贴上"难管理"的标签，影响协作效率。'},
+career:{advantage:'你适合走非标准路径。在事业上，你是"颠覆性机会的发现者"。你可能不适合在论资排辈的传统公司。你适合从0到1的开创，或者对有权力和资源能够对僵化的企业进行革命性改造。你的财富往往来自你创造的独特价值，而不是按部就班的积累。你不适合复制成功模板，但适合创造新规则。',risks:'你对长期打磨、重复执行、细节维护的忍耐度偏低。当事情进入"慢慢做、慢慢积累"的阶段，你的热情容易下降。\n你和"权威"关系紧张：你挑战规则的本性，可能让你难以获得传统投资或晋升。\n变现周期较长：你创造的价值（新理念、新模式）比较颠覆，市场接受需要相对较长的时间来验证。所以，你的变现时间会有点慢，容易陷入叫好不叫座的困境。',practice:'将不满转化为解决方案：把你的"叛逆的想法"转换成领导、投资人、客户能听懂的"市场价值"和"增长故事"。有逻辑，有案例，有方法，有目标。\n用结果验证观点：不是为了反对而反对，是为了更好的结果才反对。要用切实的结果去证明你的反对是正确的。'},
+ipSuggestion:'你适合立场型、观点型、反共识IP。\n你的人设就是你的真实态度和尖锐观察。你不用装完美，你越真实越有力量。',
+chargingQuote:'那团火，但也记得，有时候最好的燃烧不是玉石俱焚，而是点亮更多的灯，去照亮那条新路。'
+},
+{
+id:'magician',name:'魔法师',eng:'Enchanter',icon:'✨',color:'#a78bfa',
+keywords:['感知','直觉','创造','转化','能量','觉醒','改变','神秘'],
+people:['鬼谷子','刘慈欣','王宁','冯骥','斯皮尔伯格'],
+brands:['泡泡玛特','抖音','美图秀秀','戴森','即梦'],
+declaration:'改变世界的，不是蛮力，而是意识与能量。',
+portrait:`你很合各方元意识中穿梭。有时候别人问你方向，把你直觉当成真理，不给别人足够空间，甚至在不自觉中替别人做决定。你觉得自己是帮助对方，但对方感受到的可能被推动、被引导、被安排，甚至是被剥夺了自主权。
+
+你很容易脱离现实，沉浸在精神或能量层面。你很容把注意力放在感受、意义、状态、觉醒上，却低估现实世界对流程、落地、执行的要求。久而久之，你对"细节""琐碎""重复"产生抗拒，觉得它们拉低了你的层级，但恰恰是这些现实部分，决定了事情能不能真正落地。
+
+你很相信自己的直觉，而且很多时候直觉确实准。这就可能导致停止学习和提升逻辑思维和认知，从而把"我感觉是这样"当作唯一依据，就容易跳过验证步骤。短期看似乎高效，长期却容易在关键判断上失误，尤其在合作、投资、承诺这些不可逆的事情上，代价会被放大。
+
+你迷恋神秘感，形式感大于实际价值。你对仪式、象征、隐喻、能量语言非常敏感，这让你很有魅力。但当你越来越依赖"感觉对了"、"氛围到了"，而忽略结果是否真实产生时，外在的形式就可能变成掩盖内在的匮乏。你看起来很厉害，但真正的问题没有被解决。`,
+mechanism:{spirit:'',drive:'',fear:'你最怕的是"无能为力"、"一成不变"和"失去感受的能力"，而掉进了完全的逻辑判断中；你害怕自己的洞见是错的，害怕自己失去灵感，害怕自己或周围的人被困在陈旧、低效的模式里，眼睁睁看着活力流失。',belief:'世界的表象只是表层逻辑，真正的改变源于更高维度认知的跃迁与能量的转换。'},
+strengths:[
+{name:'感受力强、直觉敏锐',desc:'你能感受到别人感受不到的东西：你比别人先捕捉到趋势和变化，细小的变化、隐藏的情绪、一个空间的能量流动，你都能瞬间捕捉，别人需要分析半天，你一看就"有感觉"。你经常先"感觉到"，再慢慢找到理由。'},
+{name:'创造力强，能把普通的事做出体验感',desc:'你天生有一种"变腐朽为神奇"的潜力：你特别擅长用细节制造情绪价值。别人提供功能，你提供感觉；别人交付结果，你交付的是"被点亮"，这在今天极其稀缺，因为市场不缺产品，缺的是"让人愿意停下来"的体验。你的创造力能够让用户产生连接感，愿意复购，愿意传播，愿意成为忠实粉丝。'},
+{name:'仪式感强，让普通变特别',desc:'你很会把事情做成一个"仪式"：无论是一场小会议、一次团队回顾，还是家庭里的晚餐，你总能让参与的人感受到节奏、意义与被重视。你擅长把"重复"变成"期待"，把"行为"变成"体验"。人们会因为为你设计的仪式，突然意识到：这件事其实很重要，我其实值得被认真对待。'}
+],
+talentArea:'',
+value:'',
+blindSpots:{weaknesses:[],risks:'关系中容易形成隐性权力结构：别人容易把你当成"看得更清楚的人""更高维的人"，久而久之，会在关系中放低自己，把判断权交给你。一旦你的判断达不到对方的期待，对方就会开始反弹，甚至会发生激烈冲突。\n\n在事业中容易落地不足：想法很高，但如果执行系统跟不上，容易反复推翻，事情就会停在"很厉害的想法"层面，既消耗你的能量，也消耗他人的信任。\n\n容易被"特殊感"迷惑：一旦你觉得自己掌握了某种"真理"或者很特殊的技能，就容易听不进其他声音，也会拒绝修正和学习，这个状态表面上自信，实际上很容易停滞不前。'},
+career:{risks:'商业落地感不足：容易高低走，你会觉得流程、财务、规则太"低维"，也不好玩，但这些恰决定项目能走多远。\n容易被愿景感动推动，却忽略现金流现实：你关注长期价值，但如果没有阶段性的现实回报，很容易陷入持续消耗。\n容易被追随和崇拜放大自我判断：当外界不断肯定你，你反而更需要警惕，因为这时最容易失真。',practice:'为每一个宏大愿景，设计一个最低可落地执行的版本，用结果反向校正你的判断，而不只是用感受；把"我觉得有价值"转化为"市场是否愿意为此付费"；搭配一个你信任的、敢于提出反对意见的现实型伙伴。'},
+ipSuggestion:'你非常适合打造思想型、觉醒型、引导型IP。\n你的内容应该致力于揭示规律、提供高维认知、描绘未来。你销售的不仅是产品，更是一种"先进的思维方式"和"通往未来的可能性"。\n阴影与风险：内容过虚难以复用；用户过度依赖你；角色感过重真实感不足',
+chargingQuote:'真正的魔法，不是让世界围着你转，而是唤醒万物心中那颗改变的种子。你不需要控制所有，只需点亮第一束光，路会自己显现。'
+},
+{
+id:'explorer',name:'探险家',eng:'Explorer',icon:'🧭',color:'#34d399',
+keywords:['自由','好奇','冒险','体验','行动','不安分的心'],
+people:['徐霞客','阿姆斯特朗','海明威','王石','褚时健'],
+brands:['侣行','Discovery探索频道','Jeep牧马人','星巴克','大疆'],
+declaration:'我不会在别人绘制的地图里过一辈子，我必须亲自去看，去走，去体验，这个世界到底是什么样。',
+portrait:`你天生带着"路在前方"的渴望，总觉得人生不该被框住。你喜欢尝试新鲜事物，讨厌被限制，追求独立与自由。对你来说，活着不是为了把日子过得整齐，而是为了把生命过得辽阔。你很难忍受一眼看到头的生活节奏，也很难长期等待在一个让你觉得"被规定、被安排、被束缚"的环境里。
+你会不断问自己：我到底是谁？我真正想要的是什么？我能不能活得更像我自己？所以别人眼中的"不安分"，在你心里更像是"诚实"。`,
+mechanism:{fear:'你害怕多年以后回头看，发现自己只是顺着别人的安排走完了一生。这种恐惧，会让你在关键时刻选择冒险，也会让你对长期承诺保持警惕。',belief:'只有走出去，答案才会慢慢出现。\n这份信念让你不断前行，也让你很难真正停下来。'},
+strengths:[
+{name:'热爱自由、敢于冒险，是你突破人生的方式',desc:'你不怕未知，也不怕变化。别人退缩的地方是你的起点，别人犹豫的地方反而是你最兴奋的瞬间。你不想困在稳定里，你想活得更真实、更生动、更接近自己。你敢离开舒适圈，敢换赛道，敢去陌生的地方，这种冒险精神让你在人生、事业、关系中不断拓宽边界。'},
+{name:'好奇心强，是你的成长动力',desc:'你对世界、对人、对经历充满兴趣。别人觉得烦的事你觉得好玩，别人看不到的细节你会盯住。你的心永远是打开的，所以你的人生很难无聊。你能快速理解新事物，能跨界学习，能从不同领域抽象出共通规律，也能在别人忽略的角落发现机会。这种能力让你在变化时代非常吃香，因为世界越变，你越有优势。'},
+{name:'极强的独立性',desc:"你不喜欢被控制，不喜欢被定义，也不喜欢被绑住。你愿意自己做决定，自己承担后果，自己走自己的路。你比很多人更早明白一个事实：只有自己的人生，才值得全力以赴。"},
+{name:'开拓能力强，善于从零到一开创性事业',desc:'你敢试、敢变、敢冒险，你擅长走新路、试新方法、看见新市场、找到别人没想到的方法。你有对新环境的快速适应力，很擅长从零开始，不依赖既有资源。'}
+],
+talentArea:'',
+value:'',
+blindSpots:{weaknesses:[],risks:''},
+career:{advantage:'',risks:'',practice:''},
+ipSuggestion:'',
+chargingQuote:'世界是一本厚厚的书，停留在一页上的人永远读不到它的精彩。你的勇气是翻页的力量。但也别忘了，偶尔也需要停下来，好好品味某一页的深意，并把读到的故事，讲给爱你的人听。\n真正的自由，不是永远在路上，而是心永远知道方向，并且有地方可以停留。'
+},
+{
+id:'innocent',name:'天真者',eng:'Innocent',icon:'🌟',color:'#67e8f9',
+keywords:['乐观','纯真','信任','希望','简单','安心'],
+people:['宫崎骏','多啦A梦','奥黛丽·赫本','小王子','陶渊明'],
+brands:['可口可乐','多芬','无印良品','全棉时代','好孩子'],
+declaration:'我相信世界本来的样子就是美好的，我要做的，只是不让它蒙尘。',
+portrait:`你是自带光芒的人。不管周围环境如何，你总能看到事情积极的一面。你不是假装乐观，而是真的相信——大多数人都是好的，大多数事都有好的可能。
+
+你坚守核心价值观，不轻易妥协。在别人选择妥协的时候，你还在坚持"这样做是对的"。这种纯粹让你在某些环境中显得格格不入，但也正是这种纯粹，让你成为他人心中的一道光。
+
+你擅长营造信任感和安心感。和你在一起，人会觉得放松、安全、有希望。这是一种极其稀缺的商业资产。`,
+mechanism:{spirit:'你追求的是内心的纯净与和谐。你希望世界简单美好，也希望自己保持初心不被污染。',drive:'你的动力来自对美好的向往和对伤害的本能回避。你做选择时，内心最常问的是："这样会让事情变得更好还是更糟？"',fear:'你最怕的是纯真被玷污，信任被背叛。你怕自己的善意被利用，怕世界不如想象中那么善良。',belief:'相信本身就是力量，保持纯真不是幼稚，而是一种勇敢。'},
+strengths:[
+{name:'天然的亲和力与信任红利',desc:'你给人的第一印象就是可信赖的。在商业中，这种信任红利意味着更低的获客成本、更高的复购率、更强的口碑传播。'},
+{name:'积极的感染力',desc:'你的乐观具有传染力。团队低落的时候，你往往是那个还能看到希望的人。这种能力让你成为团队的情绪稳定器。'},
+{name:'坚定的价值观',desc:"你不随波逐流。当所有人都往一边倒的时候，你还愿意停下来想一想。这种品质在品牌建设中尤为珍贵——它让你的品牌有了「灵魂」。"}
+],
+talentArea:'品牌传播、公益教育、母婴健康、生活方式、社区运营',
+value:'你最大的价值在于：你能为品牌和组织注入信任基因。在一个人人都在营销的时代，真诚是最稀缺的货币，而你恰好拥有大量储备。',
+blindSpots:{weaknesses:[
+{name:'回避冲突',desc:'你可能因为不愿破坏和谐而回避必要的问题讨论，导致问题积压。'},
+{name:'过于理想化',desc:'有时你看不到现实的复杂性，对人和事的判断过于正面，容易吃亏。'}
+],risks:'可能在复杂商业环境中缺乏警觉性'},
+career:{advantage:'适合需要建立长期信任关系的行业和岗位。你不需要靠强势说服，而是靠真诚打动人心。',risks:'在高度竞争、需要快速决断的环境中可能显得犹豫不决。',practice:'学会区分"善良"和"软弱"。保护自己的同时，保持对他人的善意。建立基本的边界意识。'},
+ipSuggestion:'适合打造温暖正向、有治愈感的个人品牌。你的人设不需要刻意包装，真实的你就是最好的内容。',
+chargingQuote:'愿你出走半生，归来仍是少年。保持纯真不是不懂世故，而是在看清世界之后，依然选择热爱它。'
+},
+{
+id:'everyman',name:'普通人',eng:'Everyman',icon:'🤝',color:'#a3c98f',
+keywords:['务实','亲和','接地气','融入','共情','靠谱'],
+people:['郭德纲','沈腾','贾玲','李子柒','罗永浩'],
+brands:['宜家','小米','蜜雪冰城','拼多多','老乡鸡'],
+declaration:'我不追求与众不同，我只追求踏踏实实地把日子过好。',
+portrait:`你是那个"靠谱的人"。在所有人都在追逐宏大叙事的时候，你在认真地把每一件小事做好。你不是平庸，你是务实。
+
+你极强的人际连接能力来自于一种天赋——你能理解普通人想什么、要什么、担心什么。这种共情能力让你在任何群体中都能迅速融入并建立信任。
+
+你是团队的定海神针。不是最耀眼的那个，但是最让人安心的那个。`,
+mechanism:{spirit:'你追求的是归属感和踏实感。你需要知道自己属于某个群体，也需要确认自己在其中有位置、有价值。',drive:'你的动力来自"把事情做成"的成就感。比起宏大的愿景，你更在意今天有没有比昨天进步一点。',fear:'你怕被孤立、被边缘化。你最怕的就是"融不进去"。',belief:'平凡不代表平庸，把平凡的事做到极致，就是不平凡。'},
+strengths:[
+{name:'超强的落地执行力',desc:'别人还在讨论方案的时候，你已经开始做了。你有把想法变成现实的能力，而且做得扎实可靠。'},
+{name:'人际粘合力',desc:"你是那种「跟谁都能聊得来」的人。在团队中，你往往是润滑剂，能把不同的人拉到一起。"},
+{name:'稳定的情绪输出',desc:'你很少大起大落，这让身边的人感到安心。在危机时刻，你的冷静和务实尤其宝贵。'}
+],
+talentArea:'社区运营、客户服务、零售管理、本地生活、大众消费品牌',
+value:'你最大的价值在于：你是连接者和执行者。没有你，很多好想法只能停留在PPT上。你让一切变得真实、可触摸、可用。',
+blindSpots:{weaknesses:[
+{name:'辨识度偏低',desc:'你可能过于低调，导致自己的贡献不被充分认可。'},
+{name:'从众倾向',desc:'有时为了融入群体，你可能会放弃自己的想法或标准。'}
+],risks:'在需要突破性创新的场景中可能偏保守'},
+career:{advantage:'适合需要耐心、细致、持续投入的领域。你在服务型行业和管理岗位上天然有优势。',risks:'如果长期只做执行不做决策，职业天花板会比较明显。',practice:'适度展现自己的独特价值。不要害怕表达不同意见——好的团队需要不同的声音。'},
+ipSuggestion:'适合打造接地气的"身边人"IP。你的优势在于真实、亲切、有烟火气。',
+chargingQuote:'平凡的日子里藏着最动人的英雄主义。你不必成为传奇，你只需要成为那个让身边的人觉得"有你在真好"的人。'
+},
+{
+id:'hero',name:'英雄',eng:'Hero',icon:'⚔️',color:'#f472b6',
+keywords:['勇敢','坚韧','竞争','使命','担当','主心骨'],
+people:['埃隆·马斯克','科比','郎平','任正非','乔布斯'],
+brands:['耐克','Under Armour','华为','特斯拉','红牛'],
+declaration:'困难越大，我就越兴奋。因为那是我证明自己的机会。',
+portrait:`你是天生的战士。面对困难和挑战，你的第一反应不是退缩——而是兴奋。因为你骨子里相信：每一次挑战都是证明自己的舞台。
+
+你有强烈的使命感驱动。你做事不只是为了自己，更是为了某种更大的目标。这种使命感让你在别人放弃的时候还能坚持，在别人迷茫的时候已经上路了。
+
+你是团队的主心骨。出问题的时候大家都会看你——不是因为你职位高，而是因为大家都知道：这个人扛得住。`,
+mechanism:{spirit:'你追求的是通过行动证明自己的价值和能力。你需要在"做到"的过程中获得存在感。',drive:'你的动力来自挑战本身。越是不可能完成的任务，越能激发你的斗志。舒适区对你来说不是奖励，是惩罚。',fear:'你怕自己不够强，怕让别人失望，怕承认自己也有脆弱的一面。',belief:'没有不可逾越的山峰，只有不敢出发的人。'},
+strengths:[
+{name:'强大的抗压能力和执行力',desc:'高压环境下你的表现反而更好。当别人慌乱的时候，你在思考对策；当别人放弃的时候，你已经冲上去了。'},
+{name:'目标感和结果导向',desc:'你不会被过程拖住，始终盯着终点。这种特质让你在项目管理、销售、创业等领域极具竞争力。'},
+{name:'激励他人的能力',desc:'你的行动本身就是最好的动员。当你带头冲锋的时候，身边的人会被你的气势带动。'}
+],
+talentArea:'创业公司、销售管理、体育竞技、军事安保、危机公关',
+value:'你最大的价值在于：你是破局者和扛鼎者。在最困难的时刻，组织最需要的就是你这样的人——能扛责任、拿结果、给所有人信心。',
+blindSpots:{weaknesses:[
+{name:'过度竞争',desc:'你可能在非竞争场景中也表现出攻击性，让合作者感到压力。'},
+{name:'忽视情感需求',desc:'你可能认为关注团队成员的感受是浪费时间，导致关系疏离。'}
+],risks:'容易陷入"战斗模式"无法切换，长期处于高耗能状态'},
+career:{advantage:'适合需要强执行力和结果导向的行业。你在创业、销售、竞技类领域有天然优势。',risks:'如果你总是独自承担所有压力，最终可能会 burn out。',practice:'学会示弱不是失败，而是成熟的标志。培养几个可以托后背的战友。定期给自己留出恢复时间。'},
+ipSuggestion:'适合打造硬核实力派IP。"用战绩说话"就是你最好的标签。',
+chargingQuote:'真正的英雄不是从不受伤，而是每次跌倒之后都能站起来继续冲锋。但请记住：英雄也需要休息，盔甲之下也是血肉之躯。'
+},
+{
+id:'caregiver',name:'看护者',eng:'Caregiver',icon:'💝',color:'#fb7185',
+keywords:['利他','保护','慷慨','温暖','守护','信任资产'],
+people:['特蕾莎修女','南丁格尔','董明珠','陶华碧','樊锦诗'],
+brands:['强生','好孩子','同仁堂','海底捞','宜家家居'],
+declaration:'照顾好身边的人，就是我人生最大的成就。',
+portrait:`你是天生的守护者。你的雷达永远开着——扫描着周围人的需求。在你还没意识到之前，你的身体已经在行动了：递上一杯水，问一句"还好吗"，默默帮人挡掉麻烦。
+
+你不是"烂好人"。你的付出是有策略的——你在经营一种叫做"信任"的资产，而这种资产在商业世界中正在变得越来越值钱。
+
+你是团队的情感中枢。大家不开心的时候会找你，遇到难题的时候也会找你。因为你给出的不只是建议，还有温度。`,
+mechanism:{spirit:'你追求的是通过给予获得意义。帮助他人让你感到自己是有价值的、被需要的。',drive:'你的动力来自看到他人因你而变好。哪怕是很小的改善，都能给你带来极大的满足感。',fear:'你怕自己付出的爱没有得到回应，怕自己照顾的所有人最后都离开。',belief:'爱是最好的投资，而我是最好的投资人。'},
+strengths:[
+{name:'敏锐的需求洞察',desc:'你几乎能在别人开口之前就察觉到他们的需要。这种能力在产品设计和客户服务中是无价的。'},
+{name:'长期的信任积累',desc:'你不是一次性交易型的人格。你擅长建立持久的关系网络，这种网络在关键时刻能发挥巨大作用。'},
+{name:'情绪支持能力',desc:'你知道如何让人感到被理解和被接纳。在团队中，你是那个让每个人都觉得自己"被看见"的人。'}
+],
+talentArea:'医疗健康、教育咨询、母婴产业、养老服务、客户成功',
+value:'你最大的价值在于：你能让关系不塌。在人人都在追逐短期利益的时代，你构建的是长期的信任资产——这是任何竞争对手都无法复制的护城河。',
+blindSpots:{weaknesses:[
+{name:'边界不清',desc:'你可能分不清"帮助"和"替代"的区别，导致过度付出。'},
+{name:'拯救者情结',desc:'你可能习惯性地拯救那些不值得拯救的人或事，消耗自己的资源。'}
+],risks:'情感透支风险较高，需要主动建立充电机制'},
+career:{advantage:'在服务型行业和需要长期关系维护的领域中你有绝对优势。你不需要推销，客户自然会回头找你。',risks:'如果你的付出得不到应有的回报，会产生严重的职业倦怠。',practice:'学会说"不"。建立清晰的服务边界。记住：照顾好自己的前提下才能更好地照顾别人。'},
+ipSuggestion:'适合打造服务型和陪伴型IP。你的人设核心词是"靠谱"和"温度"。',
+chargingQuote:'最好的守护，不是把自己燃尽成灰，而是让自己长成一棵大树——根扎得深，叶撑得广，既能遮风挡雨，也能四季常青。'
+},
+{
+id:'lover',name:'情人',eng:'Lover',icon:'💋',color:'#f472b6',
+keywords:['热情','感性','审美','亲密','浪漫','美感'],
+people:['香奈儿','玛丽莲·梦露','王家卫','木心','三毛'],
+brands:['香奈儿','迪奥','Tiffany','Airbnb','小红书'],
+declaration:'没有美和爱的世界，不值得我来过这一遭。',
+portrait:`你是感官的信徒。美的事物对你来说不是奢侈品——是必需品。你无法忍受丑陋、粗糙、没有质感的存在。
+
+你对深度情感连接有着近乎执着的追求。表面的社交对你来说像喝白开水一样乏味，你要的是那种灵魂共振的亲密感。
+
+你的审美品味是你最强的武器——它能帮你在一秒钟内判断一个品牌、一个产品、一个人的层次。`,
+mechanism:{spirit:'你追求的是极致的美感体验和深刻的情感共鸣。你要的不只是好看，而是动人。',drive:'你的动力来自美的吸引和爱的渴望。当你遇到真正打动你的东西，你会全身心地投入其中。',fear:'你怕一生都没有遇到真正的灵魂伴侣，怕自己的热情无处安放。',belief:'美不是装饰，美是生命的本质形式之一。'},
+strengths:[
+{name:'卓越的审美感知',desc:'你的眼睛和心灵对美有着天然的敏感。这种能力在设计、艺术、时尚、品牌等所有涉及"感官体验"的领域都是核心竞争力。'},
+{name:'深度的情感表达能力',desc:'你能说出别人说不出的感受。无论是文字、语言还是其他媒介，你的表达总是带有独特的情感温度。'},
+{name:'魅力与吸引力',desc:'你身上有一种自然的磁场，能让人不由自主地靠近你、喜欢你、信任你。'}
+],
+talentArea:'时尚美妆、奢侈品、艺术设计、婚庆策划、情感咨询、生活方式媒体',
+value:'你最大的价值在于：你能为产品和品牌注入灵魂。在一个同质化严重的世界里，你创造的独特审美体验是无法被复制的差异化优势。',
+blindSpots:{weaknesses:[
+{name:'感性压过理性',desc:'在做重要决策时，你可能被情感左右，忽视数据和逻辑。'},
+{name:'理想化倾向',desc:'你可能对人对事抱有过高的期待，现实落差时会深受打击。'}
+],risks:'在需要冷静客观的场景中可能做出偏差决策'},
+career:{advantage:'所有与美、情感、体验相关的行业都是你的主场。你不需要说服别人——你只需要让他们"感受到"。',risks:'如果你的工作环境过于理性和冰冷，你会感到窒息和压抑。',practice:'在做重大决定前，给自己一段"冷却期"。学会欣赏理性的美——数据也可以是美丽的。'},
+ipSuggestion:'适合打造美学型、情感型IP。你的每一条内容都应该是一张视觉名片。',
+chargingQuote:'爱不是占有，而是欣赏；美不是炫耀，而是分享。愿你永远保有那份对美的赤诚——它不是你的软肋，而是你最坚硬的铠甲。'
+},
+{
+id:'creator',name:'创造者',eng:'Creator',icon:'🎨',color:'#a78bfa',
+keywords:['创新','想象','表达','完美主义','原创','从零到一'],
+people:['史蒂夫·乔布斯','宫崎骏','达芬奇','埃隆·马斯克','J.K.罗琳'],
+brands:['苹果','乐高','Adobe','Notion','Figma'],
+declaration:'我能想到的最伟大的事，就是把脑子里那个画面变成现实。',
+portrait:`你的大脑是一个永不熄灭的创意工厂。点子像泉水一样涌出来，拦都拦不住。别人觉得"够了"，你觉得"还可以更好"；别人觉得"完成了"，你觉得"这才刚开始"。
+
+你对原创性有着近乎病态的追求。模仿对你来说不仅是无聊——简直是侮辱。你必须做出"只有我才能做出的东西"。
+
+完美主义既是你的天赋也是你的诅咒。它让你的作品质量极高，但也让你常常陷入无尽的修改循环中。`,
+mechanism:{spirit:'你追求的是把脑海中的想象变为可触摸的现实。创作的过程本身就是你存在的意义。',drive:'你的动力来自"我想到了一个绝妙的东西，我必须把它造出来"。',fear:'你怕自己的创造力枯竭，怕再也想不出新的东西，怕被复制、被超越。',belief:'世界上所有的伟大，最初都只是一个疯狂的念头。'},
+strengths:[
+{name:'源源不断的创意产出',desc:'你不是一个点子——你是一个点子库。在需要创新解决方案的场景中，你就是团队最宝贵的资产。'},
+{name:'极致的品质追求',desc:'你容忍不了"差不多"。这种近乎强迫症的标准让你的作品始终保持在很高的水准上。'},
+{name:'独特的视角和表达方式',desc:'你看到的和别人不一样。这种差异性让你在内容创作、产品设计、品牌塑造中拥有无可替代的位置。'}
+],
+talentArea:'内容创作、产品设计、编程开发、影视制作、文学艺术、游戏设计',
+value:'你最大的价值在于：你是从0到1的缔造者。没有你，世界少了一份独特；有了你，多了一种可能性。',
+blindSpots:{weaknesses:[
+{name:'完美主义拖延',desc:'因为总想做到最好，你可能迟迟不肯发布/交付，导致错失时机。'},
+{name:'商业化意识薄弱',desc:'你可能过于专注创作本身，而忽视了作品的商业价值和传播策略。'}
+],risks:'可能陷入"创作-不满意-重做"的死循环，导致项目延期'},
+career:{advantage:'所有需要原创能力的行业都是你的舞台。你的作品本身就是最好的简历。',risks:'如果你不能学会"够好了就发布"，你的才华可能永远停留在草稿阶段。',practice:'设定明确的完成标准和截止日期。"完成比完美更重要"——先把作品交出去，再用迭代来完善它。'},
+ipSuggestion:'适合打造内容型和作品型IP。"用作品说话"是你最有效的传播策略。',
+chargingQuote:'创作的最高境界不是完美无缺，而是真诚地表达了你自己。别让你的完美主义谋杀你的创造力——先让它出生，再帮它长大。'
+},
+{
+id:'jester',name:'小丑',eng:'Jester',icon:'🎭',color:'#fbbf24',
+keywords:['幽默','洒脱','乐观','机智','快乐','打破边界'],
+people:['周星驰','金·凯瑞','憨豆先生','李诞','王建国'],
+brands:['M&M\'s','杜蕾斯','汉堡王','Wendy\'s','喜茶'],
+declaration:'人生那么短，不好笑的事情就不值得花时间去做。',
+portrait:`你是一个行走的快乐制造机。不管气氛多么沉重，你总有办法让大家笑出来。这不是逃避——这是你的超能力。
+
+你看待世界的方式和别人不一样。在别人看到严肃问题的地方，你看到了荒诞；在别人感到焦虑的时候，你找到了笑点。这种能力不是每个人都能理解的——但它无比珍贵。
+
+你不喜欢装腔作势，讨厌一本正经的场合。你的本能反应是：给这里加点料吧！`,
+mechanism:{spirit:'你追求的是当下的快乐和自由。你不想被严肃绑架，也不想被规矩框死。',drive:'你的动力来自"这也太搞笑了"的冲动。看到荒诞的事情，你忍不住要调侃一下。',fear:'你怕生活变得无趣、沉闷、充满条条框框。你怕自己也变成那个只会念经的成年人。',belief:'如果不能笑着活下去，那活着还有什么意思？'},
+strengths:[
+{name:'极佳的幽默感和即兴能力',desc:'你的反应速度快、联想能力强，能在任何场合找到合适的幽默切入点。'},
+{name:'化解紧张氛围的天赋',desc:'尴尬的场面到你手里就会消散。这种能力在谈判、演讲、团队建设中有奇效。'},
+{name:'病毒式传播潜力',desc:'你生产的内容天然具有传播属性。有趣的内容比任何广告预算都有效。'}
+],
+talentArea:'短视频、脱口秀、娱乐节目、社交媒体运营、活动主持、广告创意',
+value:'你最大的价值在于：你能让不可能的事情变得可能——因为幽默是最好的破冰器，也是最锋利的武器。',
+blindSpots:{weaknesses:[
+{name:'回避严肃议题',desc:'你可能会用幽默来回避需要认真对待的问题，导致问题被搁置。'},
+{name:'难以深入',desc:'习惯了浅层互动，可能在需要深度思考和持久投入的事情上缺乏耐心。'}
+],risks:'可能在需要严肃对待的场合被认为不够专业或不成熟'},
+career:{advantage:'娱乐行业和新媒体领域是你的主场。你的内容天然具有流量属性。',risks:'如果一直停留在搞笑层面，可能难以建立更深层次的个人品牌影响力。',practice:'学会在该认真的时候收起笑容。幽默可以是你的工具，但不应该是你唯一的工具。'},
+ipSuggestion:'适合打造娱乐型IP和社交媒体达人形象。你的评论区就是你的第二战场。',
+chargingQuote:'笑是对抗虚无最有力的武器。但请记住——最好的喜剧演员，心里都藏着一个最深沉的悲剧演员。你的幽默之所以动人，是因为它背后有真心。'
+},
+{
+id:'sage',name:'圣人',eng:'Sage',icon:'🦉',color:'#67e8f9',
+keywords:['智慧','德行','深度','客观','引领','照亮'],
+people:['老子','苏格拉底','孔子','查理·芒格','稻盛和夫'],
+brands:['谷歌','知乎','得到','TED','哈佛大学'],
+declaration:'以智慧之光引领方向，以德行之力感召众生。',
+portrait:`你是人群中的灯塔。当所有人都在争论对错的时候，你在寻找答案；当大家在追逐热点的时候，你在追问本质。
+
+你的知识储备和思维能力远超常人，但你最大的特点不在于"知道得多"——而在于"看得深"。你善于从纷繁的信息中提炼出本质规律，并用简洁的语言传达给他人。
+
+你不是冷冰冰的知识机器。你身上有一种由内而外的气质，让人觉得：跟着这个人走，不会错。`,
+mechanism:{spirit:'你追求的是更高层级的认知和更接近真相的理解。知识对你来说不是工具——它是目的本身。',drive:'你的动力来自"我好像找到了一个新的角度来看这个问题"。每一次认知突破都让你兴奋不已。',fear:'你怕自己的认知是错误的或有限的，怕自己误导了他人。',belief:'真理不在书本里——真理在不断的追问和实践中。'},
+strengths:[
+{name:'深邃的分析和洞察力',desc:'你能在别人只看到表象的地方看到本质。这种能力在战略规划、投资决策、问题诊断中极具价值。'},
+{name:'系统的知识架构',desc:'你不是碎片化的信息收集者——你是一个知识建筑师。你能够把零散的信息整合成一个有逻辑的体系。'},
+{name:'以德服人的影响力',desc:'你不需要大声说话就能让人信服。你的言行一致、知行合一，这种一致性本身就是最有力的说服。'}
+],
+talentArea:'战略咨询、教育培训、研究分析、知识付费、文化传播、思想领导',
+value:'你最大的价值在于：你是方向的制定者和标准的设立者。在混沌之中，人们需要你来指出北在哪里。',
+blindSpots:{weaknesses:[
+{name:'过度理性导致的距离感',desc:'你可能让人觉得高高在上、难以亲近，从而影响沟通效果。'},
+{name:'分析瘫痪',desc:'在需要快速决策的时候，你可能陷入过度分析而迟迟无法行动。'}
+],risks:'可能因为标准过高而显得不近人情'},
+career:{advantage:'所有需要专业深度和系统思维的领域都是你的主场。咨询、教育、研究领域尤其适合你。',risks:'如果你的表达过于学术化和抽象化，可能难以触达大众受众。',practice:'学会用更简单的语言表达深刻的思想。记住：最高的智慧是让普通人也能听懂的智慧。'},
+ipSuggestion:'适合打造专家型、思想领袖型IP。你的内容核心应该是"提供新认知框架"。',
+chargingQuote:'真正的圣人不是站在高处俯视众生，而是弯下腰来，用自己的光照亮别人脚下的路。你的智慧不应该成为隔阂——而应该成为桥梁。'
+},
+{
+id:'ruler',name:'统治者',eng:'Ruler',icon:'👑',color:'#818cf8',
+keywords:['领导','秩序','责任','格局','掌控','长治久安'],
+people:['秦始皇','拿破仑','巴菲特','任正非','比尔·盖茨'],
+brands:['微软','奔驰','波音','中国银行','万豪酒店'],
+declaration:'秩序不是束缚——秩序是让一切得以运转的基础。',
+portrait:`你是天生的掌舵者。混乱和无序会引发你身体上的不适反应——就像鱼离开了水。
+
+你看到的不是眼前的一件事，而是一整盘棋。你的思维模式永远是全局性的：这个决定会影响哪些人？三年后会怎样？整个系统的运转效率会如何？
+
+你不是喜欢控制——你需要掌控感。因为你知道，没有掌控就没有秩序，没有秩序就没有可持续的发展。`,
+mechanism:{spirit:'你追求的是建立一个有序的、高效的、可持续运行的系统。你享受的不是权力本身——而是"一切尽在掌握"的安全感。',drive:'你的动力来自"我可以让它变得更好、更高效、更有序"。每当看到混乱，你就忍不住想去整顿它。',fear:'你最怕的是失控——不管是局面失控、团队失控，还是自己失控。失控对你来说等同于失败。',belief:'好的领导者不是管得最多的人，而是建好系统后最少需要干预的人。'},
+strengths:[
+{name:'卓越的战略眼光和全局思维',desc:'你天然具备从宏观角度看问题的能力。这种能力在企业战略、组织管理、投资布局中至关重要。'},
+{name:'强大的组织协调能力',desc:'你知道怎么把不同的人放在合适的位置上。你像一个指挥家，让每个音符都在正确的时刻响起。'},
+{name:'建立规则和制度的能力',desc:'你善于从无序中建立有序。在创业早期或转型期，这种能力尤其珍贵。'}
+],
+talentArea:'企业管理、政府机关、金融银行、平台型企业、大型项目管理',
+value:'你最大的价值在于：你能让混乱的系统运转起来，并让它越来越高效。你是组织的骨架——没有你，一切都会松散垮塌。',
+blindSpots:{weaknesses:[
+{name:'过度控制',desc:'你可能因为追求秩序而压制了他人的创造力和主动性。'},
+{name:'难以授权',desc:'你总觉得"自己做更快更好"，结果把自己累垮的同时也让团队失去了成长的机会。'}
+],risks:'可能导致团队缺乏活力和创新能力'},
+career:{advantage:'所有需要统筹管理和战略规划的岗位都是你的天然领地。',risks:'如果你不能学会放手，你的管理半径将受到严重限制，职业生涯也可能遇到瓶颈。',practice:'练习"战略性放手"——把任务分配下去，接受80分的产出。记住：培养出一个能干的下属，比你亲自做完十件事更有价值。'},
+ipSuggestion:'适合打造领袖型、导师型、平台型IP。你的形象关键词是"稳重"和"格局"。',
+chargingQuote:'最好的统治者，不是坐在宝座上发号施令的那个人，而是建好了一套系统后，即使他不在场，一切依然井然有序运行的那个人。真正的权力，是赋予他人权力的能力。'
+}
+];
+
+const typeIds = personalityTypes.map(p=>p.id);
+
+// ============ QUESTIONS ============
+const questions = [
+{id:1,type:'jester',text:'我总是人前给人带来快乐，人后自己暗自神伤。'},
+{id:2,type:'everyman',text:'我坚信实用主义，并且很想找到可以依靠的人。'},
+{id:3,type:'magician',text:'我擅长给别人看似无能为力的事情带来转机。'},
+{id:4,type:'caregiver',text:'我总是能看到别人的细微的需求。'},
+{id:5,type:'outlaw',text:'我不怕得罪人。'},
+{id:6,type:'ruler',text:'在群体中，我常常自然地成为那个拿主意的人。'},
+{id:7,type:'lover',text:'我能敏锐地察觉到别人的情绪变化。'},
+{id:8,type:'creator',text:'我会很执着于钻研产品，并且认为我的就是最好的。'},
+{id:9,type:'innocent',text:'我觉得这个世界很安全。'},
+{id:10,type:'sage',text:'我能从各种人那里学到东西，并且很擅长转化为自己可以用的。'},
+{id:11,type:'hero',text:'获得任何成功的关键是纪律与训练，并且我以往就是这样践行的。'},
+{id:12,type:'explorer',text:'我喜欢找寻新鲜事物，但没有常性，很容易被另一个新鲜事物所吸引。'},
+{id:13,type:'jester',text:'我喜欢给别人带来快乐，别人会觉得我很有趣。'},
+{id:14,type:'magician',text:'我会沉浸于精神的满足，而不过多的考虑现实的压力。'},
+{id:15,type:'everyman',text:'在做选择时，我会优先参照和跟随大多数人的选择，这让我感到更安全。'},
+{id:16,type:'outlaw',text:'喜欢我的人很喜欢，讨厌我的人很讨厌。'},
+{id:17,type:'caregiver',text:'我很难拒绝别人的请求。'},
+{id:18,type:'ruler',text:'在别人眼中，我具有领袖的特质。'},
+{id:19,type:'lover',text:'如果感受不到爱，我便失去了动力。'},
+{id:20,type:'hero',text:'即使取得了比较好的成就，我仍会觉得自己未尽全力。'},
+{id:21,type:'innocent',text:'我相信我所遇到的人都值得信任。'},
+{id:22,type:'sage',text:'我努力使自己摆脱幻想，让自己更加理性客观的去寻找真理。'},
+{id:23,type:'hero',text:'就算别人都坐视不理，我也无法眼睁睁地看着错误发生。'},
+{id:24,type:'explorer',text:'对我而言，新的尝试和找寻的过程比结果更重要。'},
+{id:25,type:'jester',text:'我不喜欢被计划和规矩绑得太死，适当轻松一下没什么大不了的。'},
+{id:26,type:'magician',text:'改变内在的意识就会改变我的外在生活，非常相信感觉。'},
+{id:27,type:'everyman',text:'在那些有权威的人面前，我会有些不自信。'},
+{id:28,type:'outlaw',text:'我不期待秩序能主动变的好起来，我要用行动去建立新秩序。'},
+{id:29,type:'caregiver',text:'照顾他人能够令我感到快乐和满足。'},
+{id:30,type:'ruler',text:'我擅长发现每个人的长处，并且善于借力各种资源。'},
+{id:31,type:'lover',text:'我特别善于给人提供情绪价值。'},
+{id:32,type:'creator',text:'我不喜欢模仿别人的创意和想法，哪怕因此多走一些弯路。'},
+{id:33,type:'innocent',text:'我总会在不好的事情中，看到事情好的一面。'},
+{id:34,type:'sage',text:'我热爱学习，并且总是会以长远的眼光看待事情，不在意眼前得失。'},
+{id:35,type:'outlaw',text:'为了维护个人信念，我愿意冒险。'},
+{id:36,type:'explorer',text:'我相信在某处一定有个更好的世界在等着我。'},
+{id:37,type:'jester',text:'当生活枯燥无味时，我喜欢改变它，使它有点花样。'},
+{id:38,type:'magician',text:'我完全相信心灵修炼能帮助我，使我的生命过得更好。'},
+{id:39,type:'everyman',text:'我常常会因为害怕失去一些东西，而默默的隐忍和妥协。'},
+{id:40,type:'outlaw',text:'我觉得自己想要反抗某些事情。'},
+{id:41,type:'caregiver',text:'我会将别人的需要放在自己的需要之前。'},
+{id:42,type:'ruler',text:'我充满野心，今天的条件限制不了明天我能获得什么。'},
+{id:43,type:'lover',text:'我很喜欢并满足于自己的人际关系。'},
+{id:44,type:'creator',text:'我的灵感来得很容易，我有许多很棒的主意，却很少去实现它们。'},
+{id:45,type:'innocent',text:'我很容易相信别人的承诺。'},
+{id:46,type:'hero',text:'我遇事总是处乱不惊，情绪稳定。'},
+{id:47,type:'hero',text:'我会将恐惧放到一边，去做我认为该做的事。'},
+{id:48,type:'explorer',text:'为了保持我的独立和自由，我愿意放弃一些别人认为很重要的东西。'},
+{id:49,type:'jester',text:'我很容易沉浸在当下的快乐里。'},
+{id:50,type:'creator',text:'我是一个很有创意的人，并且总会有奇思妙想的灵光，但常常会因为过于前卫，让别人觉得难以实现。'},
+{id:51,type:'everyman',text:'童年时，我会有被忽视、被打压或缺乏父母照顾的经历。'},
+{id:52,type:'sage',text:'我常常质疑那些大家都接受的或者习以为常的规则。'},
+{id:53,type:'caregiver',text:'牺牲自己的利益去帮助别人，让我感到自己有价值。'},
+{id:54,type:'ruler',text:'我喜欢掌控并愿意负责任。'},
+{id:55,type:'lover',text:'比起实用性，我更在意审美和高级感。'},
+{id:56,type:'creator',text:'我正在将想法变为人人可用的产品。'},
+{id:57,type:'innocent',text:'我相信人不会故意去伤害别人。'},
+{id:58,type:'sage',text:'我总是喜欢思考和深挖事情的本质和逻辑。'},
+{id:59,type:'jester',text:'我不会等事情完全想明白再去做，我要做了再说。'},
+{id:60,type:'explorer',text:'即便是有现成的方案，我也还是希望寻找新鲜的哪怕有风险的方案。'},
+{id:61,type:'everyman',text:'我依赖轻松和谐的氛围，因此常常会做事紧迫感不强，拿到的结果差强人意。'},
+{id:62,type:'magician',text:'我擅长给人们制造意想不到的惊喜。'},
+{id:63,type:'outlaw',text:'我觉得这个世界并不公平，命好的总会被眷顾，命不好的常常被辜负。'},
+{id:64,type:'magician',text:'我总能从一件事中看到辩证的另一面，并无顾忌的讲出来。'},
+{id:65,type:'caregiver',text:'我发现帮别人做事比为自己做事更容易。'},
+{id:66,type:'ruler',text:'我喜欢井井有条地按照规划行事。'},
+{id:67,type:'lover',text:'我喜欢让彼此没有关系的人因我而产生新的链接。'},
+{id:68,type:'creator',text:'我享受从无到有创造出新东西的过程。'},
+{id:69,type:'innocent',text:'我总是会盲目的乐观。'},
+{id:70,type:'sage',text:'我常常能一针见血地指出问题的关键。'},
+{id:71,type:'hero',text:'我对自己的要求很高，凡事我要求自己先做到，再要求别人做到。'},
+{id:72,type:'explorer',text:'熟悉和稳定的环境对我来说反而更加不安。'}
+];
+
+// ============ STATE ============
+let currentQuestion=0,answers={},testStarted=false,fillingUnanswered=false;
+let cachedScores=null,cachedSorted=null; // for paywall
+
+// ============ CORE FUNCTIONS ============
+function startTest(){
+  testStarted=true;currentQuestion=0;answers={};
+  cachedScores=null;cachedSorted=null;
+  document.getElementById('introSection').style.display='none';
+  document.getElementById('startSection').style.display='none';
+  document.getElementById('progressWrap').classList.add('active');
+  document.getElementById('navButtons').classList.add('active');
+  document.getElementById('resultSection').classList.remove('active');
+  document.getElementById('previewSection').classList.remove('active');
+  document.getElementById('paywallOverlay').classList.remove('active');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q=questions[currentQuestion];
+  const savedAnswer=answers[q.id]||0;
+  const options=[
+    {val:1,label:'从来没有'},
+    {val:2,label:'很少'},
+    {val:3,label:'有时'},
+    {val:4,label:'经常'},
+    {val:5,label:'总是'}
+  ];
+  document.getElementById('questionContainer').innerHTML=
+    `<div class="question-card active" id="qCard">
+      <span class="question-num">第 ${q.id} 题 · 共 72 题</span>
+      <div class="question-text">${q.text}</div>
+      <div class="options">${options.map(o=>
+        `<label class="option-label">
+          <input type="radio" name="q${q.id}" value="${o.val}" ${savedAnswer===o.val?'checked':''} onchange="selectAnswer(${q.id},${o.val})">
+          <span class="option-radio"></span>
+          <span class="option-text">${o.label}</span>
+        </label>`).join('')}
+      </div>
+    </div>`;
+  updateProgress();
+  updateNavButtons();
+}
+
+function selectAnswer(qId,score){
+  answers[qId]=score;
+  updateNavButtons();
+  setTimeout(()=>{
+    if(fillingUnanswered){
+      const nextUn=questions.find(q=>!answers[q.id]);
+      if(nextUn){
+        currentQuestion=questions.indexOf(nextUn);
+        renderQuestion();
+        const toast=document.getElementById('toastReminder');
+        const remain=questions.length-Object.keys(answers).length;
+        toast.textContent=remain>0?`📝 还剩 ${remain} 道未答题，继续加油！`:'✅ 全部作答完毕！正在跳转...';
+        toast.style.display='block';
+        setTimeout(()=>{toast.style.display='none'},2000);
+        if(remain>0){
+          const qCard=document.getElementById('qCard');
+          if(qCard){qCard.style.animation='none';qCard.offsetHeight;qCard.style.animation='shake 0.4s ease';}
+        }
+      }else{
+        fillingUnanswered=false;currentQuestion=questions.length-1;renderQuestion();
+      }
+    }else if(currentQuestion<questions.length-1){
+      nextQuestion();
+    }
+  },400);
+}
+
+function updateProgress(){
+  const total=questions.length,done=Object.keys(answers).length,pct=Math.round((done/total)*100);
+  document.getElementById('progressText').textContent=`第 ${currentQuestion+1} / ${total} 题`;
+  document.getElementById('progressPercent').textContent=`${pct}%`;
+  document.getElementById('progressFill').style.width=`${pct}%`;
+  updateNavButtons();
+}
+
+function updateNavButtons(){
+  const q=questions[currentQuestion],total=questions.length;
+  document.getElementById('btnPrev').disabled=(currentQuestion===0);
+  document.getElementById('btnPrev').style.display=(currentQuestion===0)?'none':'inline-block';
+  const done=Object.keys(answers).length;
+  if(currentQuestion===total-1){
+    document.getElementById('btnNext').style.display='none';
+    document.getElementById('btnSubmit').style.display='inline-block';
+    if(done<total){
+      document.getElementById('btnSubmit').textContent=`查看结果 ✨（还有${total-done}题未答）`;
+    }else{
+      document.getElementById('btnSubmit').textContent='查看结果 ✨';
+    }
+  }else{
+    document.getElementById('btnNext').style.display='inline-block';
+    document.getElementById('btnSubmit').style.display='none';
+  }
+}
+
+function nextQuestion(){
+  if(currentQuestion<questions.length-1){
+    currentQuestion++;renderQuestion();
+    window.scrollTo({top:200,behavior:'smooth'});
+  }
+}
+
+function prevQuestion(){
+  if(currentQuestion>0){
+    currentQuestion--;renderQuestion();
+    window.scrollTo({top:200,behavior:'smooth'});
+  }
+}
+
+// ============ SUBMIT → PAYWALL ============
+function submitTest(){
+  if(Object.keys(answers).length<questions.length){
+    fillingUnanswered=true;
+    const unanswered=questions.find(q=>!answers[q.id]);
+    const unCount=questions.length-Object.keys(answers).length;
+    if(unanswered){
+      currentQuestion=questions.indexOf(unanswered);renderQuestion();
+      const toast=document.getElementById('toastReminder');
+      toast.textContent=`⚠️ 还有 ${unCount} 道题未作答！已进入补答模式`;
+      toast.style.display='block';
+      setTimeout(()=>{toast.style.display='none'},3000);
+      const qCard=document.getElementById('qCard');
+      if(qCard){qCard.style.animation='none';qCard.offsetHeight;qCard.style.animation='shake 0.6s ease';}
+    }
+    return;
+  }
+
+  // Calculate scores
+  const scores={};typeIds.forEach(t=>{scores[t]=0});
+  questions.forEach(q=>{scores[q.type]+=answers[q.id]||0});
+  const maxPossible=30;typeIds.forEach(t=>{scores[t]=Math.round((scores[t]/maxPossible)*100)});
+  const sorted=typeIds.map(t=>({id:t,score:scores[t]})).sort((a,b)=>b.score-a.score);
+
+  cachedScores=scores;
+  cachedSorted=sorted;
+
+  // Hide test UI
+  document.getElementById('progressWrap').classList.remove('active');
+  document.getElementById('navButtons').classList.remove('active');
+  document.getElementById('questionContainer').innerHTML='';
+  document.getElementById('introSection').style.display='none';
+  document.getElementById('startSection').style.display='none';
+
+  // Show paywall
+  document.getElementById('paywallOverlay').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+
+// ============ UNLOCK FULL REPORT ============
+function unlockFullReport(){
+  document.getElementById('paywallOverlay').classList.remove('active');
+  document.body.style.overflow='';
+  renderFullResults();
+}
+
+function renderFullResults(){
+  const sorted=cachedSorted;
+  const rs=document.getElementById('resultSection');rs.classList.add('active');
+  document.getElementById('previewSection').classList.remove('active');
+
+  const topType=personalityTypes.find(p=>p.id===sorted[0].id);
+  document.getElementById('resultType').innerHTML=
+    `你的主导人格是：<b style="background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.15em;">${topType.icon} ${topType.name}</b> —— ${topType.declaration}`;
+
+  let chartHTML='';sorted.forEach((item,idx)=>{
+    const pt=personalityTypes.find(p=>p.id===item.id),isTop=idx<3;
+    chartHTML+=`<div class="score-row${isTop?' top':''}">
+      <span class="score-name">${pt.icon} ${pt.name}</span>
+      <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${item.score}%;${isTop?'':`background:linear-gradient(90deg,${pt.color}88,${pt.color}44);`}"></div></div>
+      <span class="score-val">${item.score}</span></div>`;
+  });
+  document.getElementById('scoreChart').innerHTML=chartHTML;
+
+  let topHTML='';
+  for(let i=0;i<3;i++){const pt=personalityTypes.find(p=>p.id===sorted[i].id);topHTML+=renderDetailCard(pt,sorted[i].score,i);}
+  document.getElementById('topDetails').innerHTML=topHTML;
+
+  let allHTML='<h3 style="margin-bottom:16px;font-size:1.05em;letter-spacing:1px;"><span style="background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">📖 全部 12 种人格详解</span></h3>';
+  sorted.forEach(item=>{const pt=personalityTypes.find(p=>p.id===item.id);allHTML+=renderDetailCard(pt,item.score,-1);});
+  document.getElementById('allResults').innerHTML=allHTML;
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============ PREVIEW ONLY ============
+function showPreviewOnly(){
+  document.getElementById('paywallOverlay').classList.remove('active');
+  document.body.style.overflow='';
+  renderPreview();
+}
+
+function showPaywallFromPreview(){
+  document.getElementById('previewSection').classList.remove('active');
+  document.getElementById('resultSection').classList.remove('active');
+  document.getElementById('paywallOverlay').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+
+function renderPreview(){
+  const sorted=cachedSorted;
+  document.getElementById('previewSection').classList.add('active');
+  document.getElementById('resultSection').classList.remove('active');
+
+  const topType=personalityTypes.find(p=>p.id===sorted[0].id);
+  document.getElementById('previewTop').innerHTML=`
+    <span class="pt-icon">${topType.icon}</span>
+    <div class="pt-name">${topType.name}</div>
+    <p style="color:var(--text-light);margin-top:6px;">${topType.declaration}</p>
+    <p style="color:var(--text-dim);font-size:0.82em;margin-top:4px;">${topType.eng} · 得分：${sorted[0].score}</p>
+  `;
+
+  let chartHTML='';sorted.forEach((item,idx)=>{
+    const pt=personalityTypes.find(p=>p.id===item.id),isTop=idx<3;
+    chartHTML+=`<div class="score-row${isTop?' top':''}">
+      <span class="score-name">${pt.icon} ${pt.name}</span>
+      <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${item.score}%;${isTop?'':`background:linear-gradient(90deg,${pt.color}88,${pt.color}44);`}"></div></div>
+      <span class="score-val">${item.score}</span></div>`;
+  });
+  document.getElementById('previewScoreChart').innerHTML=chartHTML;
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============ DETAIL CARD RENDERER ============
+function renderDetailCard(pt,score,rankIdx){
+  const rankLabels=['【主导人格】','【辅助人格】','【第三人格】'];
+  const rankTag = rankIdx>=0?`<span class="rank-badge">${rankLabels[rankIdx]}</span>`:'';
+
+  let h=`<div class="detail-card" style="border-left:4px solid ${pt.color};">
+    <div class="dc-banner" style="background:linear-gradient(180deg,${pt.color}12,transparent 80%)">
+      <span class="dc-icon">${pt.icon}</span>
+      <div class="dc-name">${pt.name}${rankTag}</div>
+      <div class="dc-eng">${pt.eng}</div>
+    </div>
+    <div class="dc-info">
+      <div class="info-row"><div class="info-label">🎯 人格关键词</div><div class="info-content">${pt.keywords.map(k=>`<span class="info-tag">${k}</span>`).join('')}</div></div>
+      <div class="info-row"><div class="info-label">👤 代表人物</div><div class="info-content">${pt.people.map(p=>`<span class="info-tag">${p}</span>`).join('')}</div></div>
+      <div class="info-row"><div class="info-label">🏷️ 代表品牌</div><div class="info-content">${pt.brands.map(b=>`<span class="info-tag brand-tag">${b}</span>`).join('')}</div></div>
+      <div class="info-row"><div class="info-label">💬 人格宣言</div><div class="declaration-box">${pt.declaration}</div></div>
+    </div>`;
+
+  if(pt.portrait){
+    h+=`<div class="sec-block sec-portrait">
+      <div class="sec-title">📜 人格总体画像 <small style="opacity:.5;font-weight:400;letter-spacing:normal">Overall Personality Portrait</small></div>
+      <p>${pt.portrait.replace(/\n/g,'<br/>')}</p>
+    </div>`;
+  }
+
+  if(pt.mechanism){
+    h+=`<div class="sec-block sec-mechanism">
+      <div class="sec-title">⚙️ 人格运行机制 <small style="opacity:.5;font-weight:400;letter-spacing:normal">Operating Mechanism</small></div>`;
+    if(pt.mechanism.spirit)h+=`<div class="sec-subtitle">➤ 精神追求</div><p>${pt.mechanism.spirit.replace(/\n/g,'<br/>')}</p>`;
+    if(pt.mechanism.drive)h+=`<div class="sec-subtitle">➤ 核心驱动力</div><p>${pt.mechanism.drive.replace(/\n/g,'<br/>')}</p>`;
+    if(pt.mechanism.fear)h+=`<div class="sec-subtitle">➤ 内在恐惧</div><p>${pt.mechanism.fear.replace(/\n/g,'<br/>')}</p>`;
+    if(pt.mechanism.belief)h+=`<div class="sec-subtitle">➤ 核心信念</div><p>${pt.mechanism.belief.replace(/\n/g,'<br/>')}</p>`;
+    h+=`</div>`;
+  }
+
+  if(pt.strengths&&pt.strengths.length){
+    h+=`<div class="sec-block sec-strengths">
+      <div class="sec-title">💪 性格优势与天赋领域 <small style="opacity:.5;font-weight:400;letter-spacing:normal">Strengths & Talents</small></div>
+      <div class="sec-subtitle">▶ 性格优势</div>`;
+    pt.strengths.forEach(s=>{h+=`<div class="str-item"><strong>${s.name}</strong><p>${s.desc}</p></div>`});
+    if(pt.talentArea)h+=`<div class="sec-subtitle">▶ 天赋优势区</div><p>${pt.talentArea}</p>`;
+    if(pt.value)h+=`<div class="sec-subtitle">▶ 人格赋值</div><p>${pt.value}</p>`;
+    h+=`</div>`;
+  }
+
+  if(pt.blindSpots){
+    h+=`<div class="sec-block sec-blind">
+      <div class="sec-title">⚠️ 性格盲区与风险提示 <small style="opacity:.5;font-weight:400;letter-spacing:normal">Blind Spots & Risks</small></div>`;
+    if(pt.blindSpots.weaknesses&&pt.blindSpots.weaknesses.length){
+      h+=`<div class="sec-subtitle">▶ 性格劣势</div>`;
+      pt.blindSpots.weaknesses.forEach(w=>{h+=`<div class="str-item"><strong>${w.name}</strong><p>${w.desc}</p></div>`});
+    }
+    if(pt.blindSpots.risks)h+=`<p>${pt.blindSpots.risks}</p>`;
+    h+=`</div>`;
+  }
+
+  if(pt.career){
+    h+=`<div class="sec-block sec-career">
+      <div class="sec-title">💼 事业财富领域表现与成长方案 <small style="opacity:.5;font-weight:400;letter-spacing:normal">Career Wealth</small></div>`;
+    if(pt.career.advantage)h+=`<div class="sec-subtitle">➤ 优势与绽放</div><p>${pt.career.advantage.replace(/\n/g,'<br/>')}</p>`;
+    if(pt.career.risks)h+=`<div class="sec-subtitle">➤ 阴影与风险</div><p>${pt.career.risks.replace(/\n/g,'<br/>')}</p>`;
+    if(pt.career.practice)h+=`<div class="sec-subtitle">➤ 修炼方案</div><p>${pt.career.practice.replace(/\n/g,'<br/>')}</p>`;
+    h+=`</div>`;
+  }
+
+  if(pt.ipSuggestion){
+    h+=`<div class="sec-block sec-ip">
+      <div class="sec-title">🎯 个人IP与商业决策建议 <small style="opacity:.5;font-weight:400;letter-spacing:normal">IP & Business Suggestions</small></div>
+      <p>${pt.ipSuggestion.replace(/\n/g,'<br/>')}</p>
+    </div>`;
+  }
+
+  if(pt.chargingQuote){
+    h+=`<div class="quote-block">
+      <div class="quote-label">💡 充电心语（人格专属）Charging Quote</div>
+      <span class="quote-mark left">"</span>
+      <div class="quote-text">${pt.chargingQuote.replace(/\n/g,'<br/>')}</div>
+      <span class="quote-mark right">"</span>
+    </div>`;
+  }
+
+  h+=`</div>`;
+  return h;
+}
+
+function toggleAllResults(){
+  document.getElementById('allResults').classList.toggle('active');
+}
+
+function retryTest(){
+  currentQuestion=0;answers={};testStarted=false;
+  cachedScores=null;cachedSorted=null;
+  document.getElementById('resultSection').classList.remove('active');
+  document.getElementById('previewSection').classList.remove('active');
+  document.getElementById('paywallOverlay').classList.remove('active');
+  document.body.style.overflow='';
+  document.getElementById('questionContainer').innerHTML='';
+  document.getElementById('introSection').style.display='block';
+  document.getElementById('startSection').style.display='block';
+  document.getElementById('allResults').classList.remove('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',(e)=>{
+  if(!testStarted)return;
+  const total=questions.length;
+  if(e.key==='ArrowRight'||e.key==='Enter'){
+    e.preventDefault();
+    if(currentQuestion<total-1)nextQuestion();
+    else if(currentQuestion===total-1&&Object.keys(answers).length>=total)submitTest();
+  }
+  if(e.key==='ArrowLeft'){e.preventDefault();prevQuestion();}
+  if(e.key>='1'&&e.key<='5'){
+    e.preventDefault();
+    const q=questions[currentQuestion];
+    selectAnswer(q.id,parseInt(e.key));
+  }
+});
+</script>
+</body>
+</html>
